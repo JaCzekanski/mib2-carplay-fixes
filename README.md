@@ -54,7 +54,7 @@ Other versions may be compatible. Feel free to give it a try and give feedback.
 
 ## Development
 
-Required software: `make`, `java`, `docker`, `unzip`
+Required software: `make`, `java`, `python3`, `unzip`
 
 1. Extract your lsd.jxe from your headunit
 2. copy it to the root of this repository

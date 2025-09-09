@@ -13,8 +13,6 @@ LSD_SOURCE_DIR = lsd_java
 LSD_JAR = lsd.jar
 LSD_JXE = lsd.jxe
 
-JXE2JAR_IMAGE = ghcr.io/adi961/jxe2jar:latest
-
 # Classpath for javac
 CLASSPATH = ".:$(LSD_JAR)"
 # Javac options
@@ -97,16 +95,18 @@ lsd_java:
 	@mkdir -p $(LSD_SOURCE_DIR)
 	@java -jar $(CFR_JAR) $(CFT_OPTS) --outputdir $(LSD_SOURCE_DIR)
 
+# Prepare Python3 venv with deps
+.venv:
+	@echo "Create venv and install dependencies"
+	python3 -m venv .venv
+	. .venv/bin/activate; pip3 install bitstring
+
+# Unpack python3 version of jxe2jar (embedded az zip)
+tools/jxe2jar:
+	@unzip -j tools/jxe2jar.zip "jxe2jar-master/src/*" -d tools/jxe2jar/
+
 # Convert lsd.jxe to lsd.jar
-lsd.jar:
+lsd.jar: .venv tools/jxe2jar
 	@echo "Extracting $(LSD_JXE) to $(LSD_JAR)..."
-	@docker run -it -v $(PWD):/data $(JXE2JAR_IMAGE) bash -c \
-	 	"python2 JXE2JAR.py /data/$(LSD_JXE) /data/$(LSD_JAR) && chown $(shell id -u):$(shell id -g) /data/$(LSD_JAR)"
+	. .venv/bin/activate; python3 tools/jxe2jar/JXE2JAR.py $(LSD_JXE) $(LSD_JAR)
 
-.PHONY: publishJxe2jar
-publishJxe2jar: buildJxe2jar
-	@docker push $(JXE2JAR_IMAGE)
-
-.PHONY: buildJxe2jar
-buildJxe2jar:
-	@docker build -t $(JXE2JAR_IMAGE) .
